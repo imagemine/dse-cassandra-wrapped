@@ -8,6 +8,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -15,13 +16,5 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfile
-          push: true
-          tags: skhatri/datastax-dse-server-ro:6.8.9-ubi7-b4
-
-
+        run: make all
 

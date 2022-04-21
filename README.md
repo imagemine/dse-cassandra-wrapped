@@ -1,3 +1,6 @@
+### DSE Cassandra Build
+Custom build of cassandra to support read only filesystem
+
 things stopping from running with readonly filesystem
 
 tries to create
