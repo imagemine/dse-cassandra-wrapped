@@ -5,6 +5,9 @@ LABEL build_reason=use_diff_user
 
 USER root
 
+RUN groupadd --system --gid=1000 app \
+    && useradd --system --no-log-init --gid app --uid=1000 app
+
 COPY --chown=dse:dse entrypoint.sh /entrypoint.sh
 
 RUN chmod 777 /entrypoint.sh \
