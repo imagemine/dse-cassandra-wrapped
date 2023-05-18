@@ -1,0 +1,100 @@
+#!/bin/sh
+
+# Copyright DataStax, Inc.
+#
+# Please see the included license file for details.
+
+if [ -z "$BASH_VERSION" ]; then
+   exec bash "$0" "$@"
+   exit 1  # Will only get here if exec itself fails to run
+fi
+
+if [ -z "$DSE_ENV" ]; then
+    for include in "$HOME/.dse-env.sh" \
+                   "`dirname "$0"`/dse-env.sh" \
+                   "`dirname "$0"`/../../../bin/dse-env.sh" \
+                   "/etc/dse/dse-env.sh"; do
+        if [ -r "$include" ]; then
+            DSE_ENV="$include"
+            break
+        fi
+    done
+fi
+
+if [ -z "$DSE_ENV" ]; then
+    echo "DSE_ENV could not be determined."
+    exit 1
+elif [ -r "$DSE_ENV" ]; then
+    . "$DSE_ENV"
+else
+    echo "Location pointed by DSE_ENV not readable: $DSE_ENV"
+    exit 1
+fi
+
+JVM_OPTS="$DSE_OPTS $JVM_OPTS"
+JVM_OPTS="$JVM_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"
+
+if [ "x$CASSANDRA_INCLUDE" = "x" ]; then
+    for include in /usr/share/cassandra/cassandra.in.sh \
+                   /usr/local/share/cassandra/cassandra.in.sh \
+                   /opt/cassandra/cassandra.in.sh \
+                   "$HOME/.cassandra.in.sh" \
+                   "`dirname "$0"`/cassandra.in.sh"; do
+        if [ -r "$include" ]; then
+            . "$include"
+            break
+        fi
+    done
+elif [ -r "$CASSANDRA_INCLUDE" ]; then
+    . "$CASSANDRA_INCLUDE"
+fi
+
+if [ -z "$CLASSPATH" ]; then
+    echo "You must set the CLASSPATH var" >&2
+    exit 1
+fi
+
+if [ "x$MAX_HEAP_SIZE" = "x" ]; then
+    if [ "$JVM_VENDOR" = "Azul" ]; then
+        # DSP-22313: Zing will round lower values up to 512M, and print a warning about that.
+        # In order to avoid the warning, we set the value to 512M upfront.
+        MAX_HEAP_SIZE="512M"
+    else
+        MAX_HEAP_SIZE="256M"
+    fi
+fi
+
+set -f
+ARGS=()
+JVM_ARGS=""
+SSL_FILE=$HOME/.cassandra/nodesync-ssl.properties
+while true
+do
+  if [ ! "$1" ]; then break; fi
+  case $1 in
+    -cs | --cql-ssl | -js | --jmx-ssl)
+      if [ -f $SSL_FILE ]
+      then
+          SSL_ARGS=$(cat $SSL_FILE | tr '\n' ' ')
+      fi
+      JVM_ARGS="$JVM_ARGS $SSL_ARGS"
+      ARGS+=("$1")
+      ;;
+    -D*)
+      JVM_ARGS="$JVM_ARGS $1"
+      ;;
+    *)
+      ARGS+=("$1")
+      ;;
+  esac
+  shift
+done
+set -- "${ARGS[@]}"
+
+"$JAVA" $JAVA_AGENT -ea -cp "$CLASSPATH" $JVM_OPTS -Xmx$MAX_HEAP_SIZE \
+        -Dcassandra.storagedir="$cassandra_storagedir" \
+        -Dlogback.configurationFile=logback-tools.xml \
+        $JVM_ARGS \
+        com.datastax.bdp.db.tools.NodeSync "$@"
+
+# vi:ai sw=4 ts=4 tw=0 et

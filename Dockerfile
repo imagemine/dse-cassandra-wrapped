@@ -1,12 +1,9 @@
-ARG VERSION="6.8.9-ubi7"
+ARG VERSION="6.8.35-ubi7"
 FROM datastax/dse-server:${VERSION}
 
 LABEL build_reason=use_diff_user
 
 USER root
-
-RUN groupadd --system --gid=1000 app \
-    && useradd --system --no-log-init --gid app --uid=1000 app
 
 COPY --chown=dse:dse entrypoint.sh /entrypoint.sh
 
@@ -17,10 +14,25 @@ RUN chmod 777 /entrypoint.sh \
     && mv /opt/dse/resources/dse/collectd /opt/dse/resources/dse/collectd-template \
     && mv /opt/dse/bin /opt/dse/bin-template
 
+COPY --chown=dse:dse nodesync /opt/dse/bin-template/nodesync
+RUN chmod 777 /opt/dse/bin-template/nodesync
+
 VOLUME ["/var/lib/cassandra" "/var/lib/dsefs" "/var/lib/spark" "/var/log/cassandra" "/var/log/spark" "/opt/dse/resources/cassandra/conf" "/opt/dse/resources/dse/conf" "/opt/dse/resources/dse/collectd" "/opt/dse/bin"  "/opt/dse/resources/spark/conf"]
 
-RUN (for x in /config /opt/dse /opt/dse/resources/cassandra/conf /opt/dse/resources/spark/conf /opt/dse/resources/dse/conf /opt/dse/resources/dse/collectd /opt/dse/bin /var/lib/cassandra /var/lib/dsefs /var/lib/spark /var/log/cassandra /var/log/spark; do \
-        chown -R dse:dse $x; done)
+RUN (for x in   /config \
+                /opt/dse \
+                /opt/dse/resources/cassandra/conf \
+                /opt/dse/resources/spark/conf \
+                /opt/dse/resources/dse/conf \
+                /opt/dse/resources/dse/collectd \
+                /opt/dse/bin \
+                /var/lib/cassandra \
+                /var/lib/dsefs \
+                /var/lib/spark \
+                /var/log/cassandra \
+                /var/log/spark; do \
+        chown -R dse:dse $x; \
+    done)
 
 ENV DS_LICENSE=accept
 
