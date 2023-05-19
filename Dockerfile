@@ -5,8 +5,9 @@ LABEL build_reason=use_diff_user
 
 USER root
 
-RUN groupadd --system --gid=1000 app \
-    && useradd --system --no-log-init --gid app --uid=1000 app
+# Change DSE user and group UID
+RUN usermod -u 10000 dse \
+    && groupmod -g 999 dse
 
 COPY --chown=dse:dse entrypoint.sh /entrypoint.sh
 
@@ -40,4 +41,3 @@ RUN (for x in   /config \
 ENV DS_LICENSE=accept
 
 USER dse
-
