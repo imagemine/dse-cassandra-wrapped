@@ -19,9 +19,10 @@ RUN chmod 777 /entrypoint.sh \
     && mv /opt/dse/bin /opt/dse/bin-template
 
 COPY --chown=dse:dse nodesync /opt/dse/bin-template/nodesync
+
 RUN chmod 777 /opt/dse/bin-template/nodesync
 
-VOLUME ["/var/lib/cassandra" "/var/lib/dsefs" "/var/lib/spark" "/var/log/cassandra" "/var/log/spark" "/opt/dse/resources/cassandra/conf" "/opt/dse/resources/dse/conf" "/opt/dse/resources/dse/collectd" "/opt/dse/bin"  "/opt/dse/resources/spark/conf"]
+VOLUME ["/var/lib/cassandra", "/var/lib/dsefs", "/var/lib/spark", "/var/log/cassandra", "/var/log/spark", "/opt/dse/resources/cassandra/conf", "/opt/dse/resources/dse/conf", "/opt/dse/resources/dse/collectd", "/opt/dse/bin", "/opt/dse/resources/spark/conf"]
 
 RUN (for x in   /config \
                 /opt/dse \
