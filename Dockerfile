@@ -1,4 +1,4 @@
-ARG VERSION="6.8.35-ubi7"
+ARG VERSION="6.8.37-ubi7"
 FROM datastax/dse-server:${VERSION}
 
 LABEL build_reason=use_diff_user
