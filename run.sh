@@ -27,3 +27,4 @@ docker run \
 -p 9042:9042 \
 -dt dse-server:latest
 
+#test
